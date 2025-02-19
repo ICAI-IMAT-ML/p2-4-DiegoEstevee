@@ -67,8 +67,11 @@ class LinearRegressor:
         # Replace this code with the code you did in the previous laboratory session
 
         # Store the intercept and the coefficients of the model
-        self.intercept = None
-        self.coefficients = None
+        XT_X = np.linalg.inv(np.dot(X.T, X))
+        XT_y = np.dot(X.T, y)
+        beta = np.dot(XT_X,XT_y)
+        self.intercept = beta[0]
+        self.coefficients = beta[1:]
 
     def fit_gradient_descent(self, X, y, learning_rate=0.01, iterations=1000):
         """
@@ -93,17 +96,17 @@ class LinearRegressor:
 
         # Implement gradient descent (TODO)
         for epoch in range(iterations):
-            predictions = None
+            predictions = X @ np.hstack([self.intercept, self.coefficients])
             error = predictions - y
 
             # TODO: Write the gradient values and the updates for the paramenters
-            gradient = None
-            self.intercept -= None
-            self.coefficients -= None
+            gradient = (learning_rate/m)* (error @ X)
+            self.intercept -= gradient[0]
+            self.coefficients -= gradient[1:]
 
             # TODO: Calculate and print the loss every 10 epochs
             if epoch % 1000 == 0:
-                mse = None
+                mse = 1/2 * np.sum(error**2)
                 print(f"Epoch {epoch}: MSE = {mse}")
 
     def predict(self, X):
@@ -126,7 +129,14 @@ class LinearRegressor:
         if self.coefficients is None or self.intercept is None:
             raise ValueError("Model is not yet fitted")
 
-        return None
+        if np.ndim(X) == 1:
+            # Predict when X is only one variable
+            predictions = self.intercept + self.coefficients*X
+        else:
+            # Predict when X is more than one variable
+            predictions = self.intercept + np.dot(X, self.coefficients)
+        return predictions
+
 
 
 def evaluate_regression(y_true, y_pred):
@@ -142,16 +152,20 @@ def evaluate_regression(y_true, y_pred):
     """
 
     # R^2 Score
-    # TODO
-    r_squared = None
+    # Calculate R^2
+    y_mean = np.mean(y_true)
+    RSS = np.sum((y_true - y_pred)**2)
+    TSS = np.sum((y_true - y_mean)**2)
+    r_squared = 1 - RSS/TSS
 
     # Root Mean Squared Error
-    # TODO
-    rmse = None
+    # Calculate RMSE
+    n = len(y_true)
+    rmse = np.sqrt((1/n)*np.sum((y_true - y_pred)**2))
 
     # Mean Absolute Error
-    # TODO
-    mae = None
+    #  Calculate MAE
+    mae = (1/n)*np.sum(np.abs((y_true - y_pred)))
 
     return {"R2": r_squared, "RMSE": rmse, "MAE": mae}
 
